@@ -1,8 +1,8 @@
 {
-	"presto": 
+	"presto-cli":
 	{
-		"destination": "/usr/bin/presto",
-		"source": "bin/presto",
+		"destination": "/usr/bin/presto-cli",
+		"source": "bin/presto-cli",
 		"priority": 10,
 		"isDirectory": false
 	}

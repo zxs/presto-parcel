@@ -2,40 +2,23 @@
 
 pushd .
 cd ${project.build.directory}
+rm -f ${parcel.name} repository
+mv ${server.tar.package} ${parcel.name}
 
-parcel_name="${project.build.finalName}"
-mkdir $parcel_name
-
+<<COMMENT
 jdk_download_url="http://download.oracle.com/otn-pub/java/jdk/${jdk.version}-${jdk.build}/jdk-${jdk.version}-linux-x64.tar.gz"
 jdk_download_name="jdk.tar.gz"
 curl -L -o $jdk_download_name -H "Cookie: oraclelicense=accept-securebackup-cookie" $jdk_download_url
 decompressed_dir="extract"
 mkdir $decompressed_dir
 tar xzf $jdk_download_name -C $decompressed_dir
-mv $decompressed_dir/$(\ls $decompressed_dir) $parcel_name/jdk
+mv $decompressed_dir/$(\ls $decompressed_dir) ${parcel.name}/jdk
 rm -rf $decompressed_dir
+COMMENT
 
+ln -s ${jdk8.home} ${parcel.name}/jdk
 
-presto_download_name="presto.tar.gz"
-presto_download_url="https://repo1.maven.org/maven2/com/facebook/presto/presto-server/${presto.version}/presto-server-${presto.version}.tar.gz"
-
-curl -L -o $presto_download_name $presto_download_url
-mkdir $decompressed_dir
-tar xzf $presto_download_name -C $decompressed_dir
-
-presto_dir=`\ls $decompressed_dir`
-for file in `\ls $decompressed_dir/$presto_dir`; do
-  mv $decompressed_dir/$presto_dir/$file $parcel_name
-done
-rm -rf $decompressed_dir
-
-presto_cli_download_url="https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/${presto.version}/presto-cli-${presto.version}-executable.jar"
-
-curl -L -O $presto_cli_download_url
-mv presto-cli-${presto.version}-executable.jar ${parcel_name}/bin/
-chmod +x ${parcel_name}/bin/presto-cli-${presto.version}-executable.jar
-
-cat <<"EOF" > ${parcel_name}/bin/presto
+cat <<"EOF" > ${parcel.name}/bin/presto-cli
 #!/usr/bin/env python
 
 import os
@@ -49,14 +32,15 @@ cmd = "env PATH=\"%s/../jdk/bin:$PATH\" %s/presto-cli-${presto.version}-executab
 
 subprocess.call(cmd, shell=True)
 EOF
-chmod +x ${parcel_name}/bin/presto
+chmod +x ${parcel.name}/bin/presto-cli-${presto.version}-executable.jar
+chmod +x ${parcel.name}/bin/presto-cli
 
-cp -a ${project.build.outputDirectory}/meta ${parcel_name}
-tar zcf ${parcel_name}.parcel ${parcel_name}/ --owner=root --group=root
+cp -a ${project.build.outputDirectory}/meta ${parcel.name}
+tar zcf ${parcel.name}.parcel ${parcel.name}/ --owner=root --group=root
 
 mkdir repository
 for i in el5 el6 sles11 lucid precise squeeze wheezy; do
-  cp ${parcel_name}.parcel repository/${parcel_name}-${i}.parcel
+  cp ${parcel.name}.parcel repository/${parcel.name}-${i}.parcel
 done
 
 cd repository
